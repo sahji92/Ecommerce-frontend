@@ -18,7 +18,10 @@ export const apiEndpoints = {
     FETCH_CART_ENDPOINT: '/fetch-cart',
     ADD_TO_CART_ENDPOINT: '/add-to-cart',
     DELETE_FROM_CART_ENDPOINT: '/remove-from-cart',
-    ORDER_FROM_CART_ENDPOINT: '/order-from-cart'
+    ORDER_FROM_CART_ENDPOINT: '/order-from-cart',
+    BUY_NOW_ORDER_ENDPOINT: '/buy-now-order',
+    CREATE_ORDER_ID_ENDPOINT: '/create-order-id',
+    AUTHORIZED_USER:'/autherised-google-user'
 }
 
 export const httpMethods = {

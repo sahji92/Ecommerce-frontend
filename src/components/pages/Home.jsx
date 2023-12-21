@@ -1,13 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, useCallback } from 'react'
 import Banners from '../common/Banners'
 import apiConnection from '../../apiConnection'
 import { apiEndpoints, httpMethods } from '../../constants'
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
+import useRazorpay from "react-razorpay";
 
 export default function Home() {
 
   const [products,setProducts] = useState([]);
+  const [Razorpay] = useRazorpay();
 
   const categoryRef = useRef()
 
@@ -59,7 +61,7 @@ export default function Home() {
     try {
         console.log(productId);
         let addToCardPayload = {
-            customerId: 'dummy',
+            customerId: JSON.parse(sessionStorage.getItem('user_data'))._id,
             productId: productId
         }
         const data = await apiConnection(apiEndpoints.ADD_TO_CART_ENDPOINT,httpMethods.POST,addToCardPayload)
@@ -74,6 +76,77 @@ export default function Home() {
         console.log(err)
     }
   }
+
+  const buyNowOrder = async (razorpayRes,total) => {
+    try {
+        let orderFromCartPayload = {
+            customerId: JSON.parse(sessionStorage.getItem('user_data'))._id,
+            total,
+            ...razorpayRes
+        }
+        const data = await apiConnection(apiEndpoints.BUY_NOW_ORDER_ENDPOINT,httpMethods.POST,orderFromCartPayload)
+        console.log(data)
+        if(data.status === 201 || 200){
+            console.log(data)
+        } else {
+            console.log(data)
+        }
+    }
+    catch(err) {
+        console.log(err)
+    }
+  }
+
+  const createOrder = async (index) => {
+    try {
+        let orderFromCartPayload = {
+            total: products[index].discountedPrice
+        }
+        const data = await apiConnection(apiEndpoints.CREATE_ORDER_ID_ENDPOINT,httpMethods.POST,orderFromCartPayload)
+        console.log(data)
+        if(data.status === 201 || 200){
+            console.log(data)
+            return data.data.orderId
+        } else {
+            console.log(data)
+        }
+    }
+    catch(err) {
+        console.log(err)
+    }
+  }
+
+  const handlePayment = async (index) => {
+
+    console.log('Reached here',products[index])
+    
+    const orderId = await createOrder(index);
+
+    const options = {
+      key: "rzp_test_YSG0qPKkfSv38n",
+      currency: "INR",
+      name: "Shopping App",
+      description: "Test Transaction",
+      image: "https://summitsoft.com/wp-content/uploads/2020/05/Icon-graphic-ADVANTAGES.png",
+      order_id: orderId,
+      handler: (res) => {
+        console.log(res);
+        buyNowOrder(res,products[index].discountedPrice)
+      },
+      notes: {
+        address: "Razorpay Corporate Office",
+      },
+      theme: {
+        color: "#3399cc",
+      },
+    };
+
+    options.amount = `${products[index].discountedPrice}00`
+
+    const rzpay = new Razorpay(options);
+    rzpay.open();
+  }
+  
 
   useEffect(()=>{
     getProducts()
@@ -119,9 +192,8 @@ export default function Home() {
                         </Card.Text>
                         <p>Price: <s>{item.price}</s></p>
                         <b>Discounted Price: {item.discountedPrice}</b>
-                            <Button variant="warning" className='me-2' >Add to cart</Button>
                             <Button variant="warning" className='me-2' onClick={()=>addToCart(item._id)}>Add to cart</Button>
-                            <Button variant="success">Buy now</Button>
+                            <Button variant="success" onClick={()=>handlePayment(index)}>Buy now</Button>
                         </Card.Body>
                     </Card>
                 })}
@@ -129,4 +201,4 @@ export default function Home() {
         </div>
     </div>
   )
-            }
+}
