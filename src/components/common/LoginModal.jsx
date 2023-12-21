@@ -4,7 +4,7 @@ import Modal from 'react-bootstrap/Modal';
 export default function LoginModal({modalValue,setShowLogin}) {
 
  const openGoogle = () => {
-    window.open("http://127.0.0.1:8000/auth/google","_blank")
+    window.open("http://127.0.0.1:8000/auth/google","_self")
  }
 
  const makeCall = () => {
